@@ -1,22 +1,31 @@
 import * as React from 'react';
-import { Text, View, StyleSheet, Image } from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  Image,
+  TouchableHighlight
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default class Pray extends React.Component {
   constructor(props) {
     super(props);
   }
+
   render() {
     return (
-      <View style={styles.pray}>
-        <Text style={styles.text}>{this.props.name}</Text>
-        <Ionicons
-          style={styles.check}
-          name='md-checkmark-circle'
-          size={32}
-          color={this.props.status == true ? 'green' : 'lightgrey'}
-        />
-      </View>
+      <TouchableHighlight onPress={this.props.onPress}>
+        <View style={styles.pray}>
+          <Text style={styles.text}>{this.props.name}</Text>
+          <Ionicons
+            style={styles.check}
+            name='md-checkmark-circle'
+            size={32}
+            color={this.props.status == true ? 'green' : 'lightgrey'}
+          />
+        </View>
+      </TouchableHighlight>
     );
   }
 }
@@ -25,7 +34,7 @@ const styles = StyleSheet.create({
   pray: {
     flexDirection: 'row',
     height: 60,
-    marginBottom: 1,
+    // marginBottom: 10,
     backgroundColor: 'white',
     borderColor: 'gray',
     padding: 15,

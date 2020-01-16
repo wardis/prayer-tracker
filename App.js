@@ -4,30 +4,69 @@ import CalendarPicker from 'react-native-calendar-picker';
 import Pray from './components/Pray';
 import moment from 'moment';
 
+let emptyPray = [
+  { name: 'Fajr', status: false },
+  { name: 'Dohr', status: false },
+  { name: 'Asr', status: false },
+  { name: 'Maghreb', status: false },
+  { name: 'Incha', status: false }
+];
+let initialList = [
+  {
+    day: moment(),
+    pray: [
+      { name: 'Fajr', status: false },
+      { name: 'Dohr', status: false },
+      { name: 'Asr', status: false },
+      { name: 'Maghreb', status: false },
+      { name: 'Incha', status: true }
+    ]
+  },
+  {
+    day: moment().add(1, 'd'),
+    pray: [
+      { name: 'Fajr', status: true },
+      { name: 'Dohr', status: true },
+      { name: 'Asr', status: false },
+      { name: 'Maghreb', status: false },
+      { name: 'Incha', status: false }
+    ]
+  }
+];
+
 export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedStartDate: moment(),
-      prays: [
-        { name: 'Fajr', status: true },
-        { name: 'Dohr', status: true },
-        { name: 'Asrm', status: true },
-        { name: 'Maghreb', status: false },
-        { name: 'Incha', status: false }
-      ]
+      selectedDay: moment(),
+      list: initialList,
+      selectedDayPrays: emptyPray,
     };
     this.onDateChange = this.onDateChange.bind(this);
   }
   onDateChange(date) {
-    this.setState({
-      // ...this.state,
-      selectedStartDate: date
-    });
+    let prays = this.findPray(date);
+    if (prays) {
+      this.setState({
+        ...this.state,
+        selectedDay: date,
+        selectedDayPrays: prays.pray
+      });
+    } else {
+      this.setState({
+        ...this.state,
+        selectedDay: date,
+        selectedDayPrays: emptyPray
+      });
+    }
+  }
+  findPray(date) {
+    return this.state.list.find(item => item.day.isSame(date, 'day'));
+  }
+  _onPressButton() {
+    alert('You tapped the button!');
   }
   render() {
-    const { selectedStartDate } = this.state;
-    const startDate = selectedStartDate ? selectedStartDate.toString() : '';
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -54,9 +93,13 @@ export default class App extends Component {
         </View>
 
         <View style={styles.list}>
-          {this.state.prays.map(pray => (
-            // <Text key={pray.name}>{pray.name}</Text>
-            <Pray key={pray.name} name={pray.name} status={pray.status} />
+          {this.state.selectedDayPrays.map(pray => (
+            <Pray
+              key={pray.name}
+              name={pray.name}
+              status={pray.status}
+              onPress={this._onPressButton}
+            />
           ))}
         </View>
       </View>
