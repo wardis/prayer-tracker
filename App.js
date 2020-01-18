@@ -1,104 +1,85 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import CalendarPicker from 'react-native-calendar-picker';
+import Constants from 'expo-constants';
+import { Calendar } from 'react-native-calendars';
 import Pray from './components/Pray';
 import moment from 'moment';
 
-let emptyPray = [
-  { name: 'Fajr', status: false },
-  { name: 'Dohr', status: false },
-  { name: 'Asr', status: false },
-  { name: 'Maghreb', status: false },
-  { name: 'Incha', status: false }
-];
-let initialList = [
-  {
-    day: moment(),
-    pray: [
-      { name: 'Fajr', status: false },
-      { name: 'Dohr', status: false },
-      { name: 'Asr', status: false },
-      { name: 'Maghreb', status: false },
-      { name: 'Incha', status: true }
-    ]
-  },
-  {
-    day: moment().add(1, 'd'),
-    pray: [
-      { name: 'Fajr', status: true },
-      { name: 'Dohr', status: true },
-      { name: 'Asr', status: false },
-      { name: 'Maghreb', status: false },
-      { name: 'Incha', status: false }
-    ]
-  }
-];
+const prayList = ['Fadjr', 'Dohr', 'Asr', 'Maghreb', 'Incha'];
+console.log(moment().format('YYYY-MM-DD'));
 
 export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedDay: moment(),
-      list: initialList,
-      selectedDayPrays: emptyPray,
+      selectedDayPrays: prayList,
+      date: moment().format('YYYY-MM-DD'),
+      prays: {}
     };
-    this.onDateChange = this.onDateChange.bind(this);
   }
-  onDateChange(date) {
-    let prays = this.findPray(date);
-    if (prays) {
-      this.setState({
-        ...this.state,
-        selectedDay: date,
-        selectedDayPrays: prays.pray
-      });
-    } else {
-      this.setState({
-        ...this.state,
-        selectedDay: date,
-        selectedDayPrays: emptyPray
-      });
-    }
+
+  onDayPress(day) {
+    const date = day.dateString;
+    this.setState({
+      ...this.state,
+      date: date,
+      prays: {
+        ...this.state.prays,
+        [date]:
+          this.state.prays[date] === undefined ? {} : this.state.prays[date]
+      }
+    });
   }
-  findPray(date) {
-    return this.state.list.find(item => item.day.isSame(date, 'day'));
+
+  onPrayPress(prayName) {
+    const name = prayName;
+    const date = this.state.date;
+    const status =
+      this.state.prays[date] === undefined
+        ? false
+        : this.state.prays[date][name] === undefined
+        ? false
+        : this.state.prays[date][name];
+    console.log(status);
+    this.setState({
+      ...this.state,
+      prays: {
+        ...this.state.prays,
+        [date]: {
+          ...this.state.prays[date],
+          [name]: !status
+        }
+      }
+    });
   }
-  _onPressButton() {
-    alert('You tapped the button!');
-  }
+
   render() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Prayer Tracker</Text>
         </View>
-        <View style={styles.calendar}>
-          <CalendarPicker
-            todayTextStyle={{ fontWeight: 'bold' }}
-            onDateChange={this.onDateChange}
-            startFromMonday={true}
-            weekdays={['M', 'T', 'W', 'T', 'F', 'S', 'S']}
-            previousTitle='<'
-            nextTitle='>'
-            todayBackgroundColor='transparent'
-            selectedDayColor='transparent'
-            selectedDayStyle={{ borderWidth: 1 }}
-            customDatesStyles={[
-              {
-                date: moment(),
-                style: { borderWidth: 1, borderColor: 'orange' }
-              }
-            ]}
+        <View>
+          <Calendar
+            // dayComponent={CustomDay}
+            onDayPress={day => this.onDayPress(day)}
+            markedDates={{
+              [this.state.date]: { selected: true }
+            }}
           />
         </View>
 
         <View style={styles.list}>
-          {this.state.selectedDayPrays.map(pray => (
+          {this.state.selectedDayPrays.map(prayName => (
             <Pray
-              key={pray.name}
-              name={pray.name}
-              status={pray.status}
-              onPress={this._onPressButton}
+              key={prayName}
+              name={prayName}
+              status={
+                this.state.prays[this.state.date] === undefined
+                  ? false
+                  : this.state.prays[this.state.date][prayName]
+              }
+              onPress={() => this.onPrayPress(prayName)}
             />
           ))}
         </View>
@@ -111,13 +92,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#eee',
-    marginTop: 23
+    paddingTop: Constants.statusBarHeight
   },
   header: {
     flex: 1,
     justifyContent: 'center',
 
-    backgroundColor: 'green',
+    backgroundColor: '#00adf5',
     width: '100%'
   },
   title: {

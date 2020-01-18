@@ -22,7 +22,7 @@ export default class Pray extends React.Component {
             style={styles.check}
             name='md-checkmark-circle'
             size={32}
-            color={this.props.status == true ? 'green' : 'lightgrey'}
+            color={this.props.status == true ? '#00adf5' : 'lightgrey'}
           />
         </View>
       </TouchableHighlight>
