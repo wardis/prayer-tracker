@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, AsyncStorage } from 'react-native';
 import Constants from 'expo-constants';
 import { Calendar } from 'react-native-calendars';
 import Pray from './components/Pray';
@@ -17,6 +17,39 @@ export default class App extends Component {
       prays: {}
     };
   }
+
+  componentDidMount() {
+    this.loadPrays();
+  }
+  loadPrays = async () => {
+    try {
+      const value = await AsyncStorage.getItem('@PrayerTracker_PRAYS');
+      if (value !== null) {
+        // value previously stored
+        this.setState({
+          ...this.state,
+          prays: JSON.parse(value)
+        });
+      }
+    } catch (e) {
+      alert('Error when loading prays');
+    }
+    console.log('Loaded.');
+  };
+
+  savePrays = async (newPrays) => {
+      try {
+        await AsyncStorage.setItem(
+          '@PrayerTracker_PRAYS',
+          JSON.stringify(newPrays)
+        );
+      } catch (e) {
+        // save error
+      }
+
+      console.log('Saved.');
+    };
+  
 
   onDayPress(day) {
     const date = day.dateString;
@@ -41,16 +74,21 @@ export default class App extends Component {
         ? false
         : this.state.prays[date][name];
     console.log(status);
-    this.setState({
-      ...this.state,
-      prays: {
-        ...this.state.prays,
-        [date]: {
-          ...this.state.prays[date],
-          [name]: !status
+    this.setState(
+      {
+        ...this.state,
+        prays: {
+          ...this.state.prays,
+          [date]: {
+            ...this.state.prays[date],
+            [name]: !status
+          }
         }
+      },
+      () => {
+        this.savePrays(this.state.prays);
       }
-    });
+    );
   }
 
   render() {
