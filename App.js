@@ -6,19 +6,31 @@ import Pray from './components/Pray';
 import moment from 'moment';
 
 const prayList = ['Fadjr', 'Dohr', 'Asr', 'Maghreb', 'Incha'];
-console.log(moment().format('YYYY-MM-DD'));
+const colors = [
+  'rgba(0,173,245, 0)',
+  'rgba(0,173,245, .07)',
+  'rgba(0,173,245, .2)',
+  'rgba(0,173,245, .4)',
+  'rgba(0,166,236, .7)',
+  'hsla(198,100%,46%, 1)'
+];
+const textColors = ['#000', '#000', '#000', '#000', '#fff', '#fff'];
+const COLOR_COUNT = colors.length;
 
 export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedDayPrays: prayList,
-      date: moment().format('YYYY-MM-DD'),
-      prays: {}
+      day: moment().format('YYYY-MM-DD'),
+      selectedDay: moment().format('YYYY-MM-DD'),
+      selectedDayColorIndex: 0,
+      prays: {},
+      marks: {}
     };
   }
 
   componentDidMount() {
+    // AsyncStorage.removeItem('@PrayerTracker_PRAYS');
     this.loadPrays();
   }
   loadPrays = async () => {
@@ -26,69 +38,162 @@ export default class App extends Component {
       const value = await AsyncStorage.getItem('@PrayerTracker_PRAYS');
       if (value !== null) {
         // value previously stored
-        this.setState({
-          ...this.state,
-          prays: JSON.parse(value)
-        });
+        this.setState(
+          {
+            ...this.state,
+            prays: JSON.parse(value)
+          },
+          () => {
+            this.setState(
+              {
+                ...this.state
+              },
+              () => {
+                this.markDays();
+              }
+            );
+          }
+        );
+      } else {
+        this.markDays();
       }
     } catch (e) {
       alert('Error when loading prays');
     }
-    console.log('Loaded.');
   };
 
-  savePrays = async (newPrays) => {
-      try {
-        await AsyncStorage.setItem(
-          '@PrayerTracker_PRAYS',
-          JSON.stringify(newPrays)
-        );
-      } catch (e) {
-        // save error
-      }
-
-      console.log('Saved.');
-    };
-  
+  savePrays = async newPrays => {
+    try {
+      await AsyncStorage.setItem(
+        '@PrayerTracker_PRAYS',
+        JSON.stringify(this.state.prays)
+      );
+    } catch (e) {
+      // save error
+    }
+  };
 
   onDayPress(day) {
-    const date = day.dateString;
-    this.setState({
-      ...this.state,
-      date: date,
-      prays: {
-        ...this.state.prays,
-        [date]:
-          this.state.prays[date] === undefined ? {} : this.state.prays[date]
+    this.setState(
+      {
+        ...this.state,
+        selectedDay: day.dateString
+      },
+      () => {
+        this.markDays();
       }
-    });
+    );
+  }
+
+  raise(colorIndex) {
+    return colorIndex < COLOR_COUNT ? ++colorIndex : COLOR_COUNT - 1;
+  }
+  lower(colorIndex) {
+    return colorIndex > 0 ? --colorIndex : 0;
   }
 
   onPrayPress(prayName) {
     const name = prayName;
-    const date = this.state.date;
-    const status =
-      this.state.prays[date] === undefined
-        ? false
-        : this.state.prays[date][name] === undefined
-        ? false
-        : this.state.prays[date][name];
-    console.log(status);
+    const day = this.state.selectedDay;
+
+    let status = false;
+    if (
+      undefined === this.state.prays[day] ||
+      undefined === this.state.prays[day][name]
+    ) {
+    } else {
+      status = this.state.prays[day][name];
+    }
+
+    let colorIndex = 1;
+    if (
+      !(
+        undefined === this.state.prays[day] ||
+        undefined === this.state.prays[day].colorIndex
+      )
+    ) {
+      colorIndex = this.state.prays[day].colorIndex;
+    }
+
+    let praysOfDay = {};
+    if (undefined === this.state.prays[day]) {
+      praysOfDay = {
+        [name]: !status,
+        colorIndex: colorIndex
+      };
+    } else {
+      praysOfDay = {
+        ...this.state.prays[day],
+        [name]: !status,
+        colorIndex: !status ? this.raise(colorIndex) : this.lower(colorIndex)
+      };
+    }
+
     this.setState(
       {
         ...this.state,
         prays: {
           ...this.state.prays,
-          [date]: {
-            ...this.state.prays[date],
-            [name]: !status
+          [day]: praysOfDay
+        },
+        selectedDayColorIndex: praysOfDay.colorIndex
+      },
+      () => {
+        this.savePrays();
+        this.markDays();
+      }
+    );
+  }
+
+  markDays() {
+    // TODO reduce time consumption by using existing marks!
+
+    let selectedDayColorIndex = 0;
+    if (
+      undefined !== this.state.prays[this.state.selectedDay] &&
+      undefined !== this.state.prays[this.state.selectedDay].colorIndex
+    ) {
+      selectedDayColorIndex = this.state.prays[this.state.selectedDay]
+        .colorIndex;
+    }
+
+    let markedDays = {
+      [this.state.day]: {
+        customStyles: {
+          container: {
+            borderWidth: 1
           }
         }
       },
-      () => {
-        this.savePrays(this.state.prays);
+      [this.state.selectedDay]: {
+        customStyles: {
+          container: {
+            borderWidth: 1
+          }
+        }
       }
-    );
+    };
+
+    Object.keys(this.state.prays).map(day => {
+      markedDays[day] = {
+        customStyles: {
+          container: {
+            backgroundColor: colors[this.state.prays[day].colorIndex]
+          },
+          text: {
+            color: textColors[this.state.prays[day].colorIndex]
+          }
+        }
+      };
+      if (day === this.state.selectedDay || day === this.state.day) {
+        markedDays[day].customStyles.container.borderWidth = 1;
+      }
+    });
+
+    this.setState({
+      ...this.state,
+      marks: markedDays
+    });
   }
 
   render() {
@@ -99,23 +204,26 @@ export default class App extends Component {
         </View>
         <View>
           <Calendar
-            // dayComponent={CustomDay}
             onDayPress={day => this.onDayPress(day)}
             markedDates={{
-              [this.state.date]: { selected: true }
+              ...this.state.marks
+            }}
+            markingType={'custom'}
+            theme={{
+              todayTextColor: '#000'
             }}
           />
         </View>
 
         <View style={styles.list}>
-          {this.state.selectedDayPrays.map(prayName => (
+          {prayList.map(prayName => (
             <Pray
               key={prayName}
               name={prayName}
               status={
-                this.state.prays[this.state.date] === undefined
+                this.state.prays[this.state.selectedDay] === undefined
                   ? false
-                  : this.state.prays[this.state.date][prayName]
+                  : this.state.prays[this.state.selectedDay][prayName]
               }
               onPress={() => this.onPrayPress(prayName)}
             />
