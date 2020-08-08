@@ -1,31 +1,31 @@
-import React, { Component } from "react";
-import { StyleSheet, Text, View, AsyncStorage } from "react-native";
-import Constants from "expo-constants";
-import { Calendar } from "react-native-calendars";
-import Pray from "./components/Pray";
-import moment from "moment";
+import React, { Component } from 'react';
+import { StyleSheet, Text, View, AsyncStorage } from 'react-native';
+import Constants from 'expo-constants';
+import { Calendar } from 'react-native-calendars';
+import Pray from './components/Pray';
+import moment from 'moment';
 
-const prayList = ["Fadjr", "Dohr", "Asr", "Maghreb", "Incha"];
+const prayList = ['Fadjr', 'Dohr', 'Asr', 'Maghreb', 'Incha'];
 const colors = [
-  "rgba(0,173,245, 0)",
-  "rgba(0,173,245, .07)",
-  "rgba(0,173,245, .2)",
-  "rgba(0,173,245, .4)",
-  "rgba(0,166,236, .7)",
-  "hsla(198,100%,46%, 1)",
+  'rgba(0,173,245, 0)',
+  'rgba(0,173,245, .07)',
+  'rgba(0,173,245, .2)',
+  'rgba(0,173,245, .4)',
+  'rgba(0,166,236, .7)',
+  'hsla(198,100%,46%, 1)'
 ];
-const textColors = ["#000", "#000", "#000", "#000", "#fff", "#fff"];
+const textColors = ['#000', '#000', '#000', '#000', '#fff', '#fff'];
 const COLOR_COUNT = colors.length;
 
 export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      day: moment().format("YYYY-MM-DD"),
-      selectedDay: moment().format("YYYY-MM-DD"),
+      day: moment().format('YYYY-MM-DD'),
+      selectedDay: moment().format('YYYY-MM-DD'),
       selectedDayColorIndex: 0,
       prays: {},
-      marks: {},
+      marks: {}
     };
   }
 
@@ -35,18 +35,18 @@ export default class App extends Component {
   }
   loadPrays = async () => {
     try {
-      const value = await AsyncStorage.getItem("@PrayerTracker_PRAYS");
+      const value = await AsyncStorage.getItem('@PrayerTracker_PRAYS');
       if (value !== null) {
         // value previously stored
         this.setState(
           {
             ...this.state,
-            prays: JSON.parse(value),
+            prays: JSON.parse(value)
           },
           () => {
             this.setState(
               {
-                ...this.state,
+                ...this.state
               },
               () => {
                 this.markDays();
@@ -58,14 +58,14 @@ export default class App extends Component {
         this.markDays();
       }
     } catch (e) {
-      alert("Error when loading prays");
+      alert('Error when loading prays');
     }
   };
 
-  savePrays = async (newPrays) => {
+  savePrays = async newPrays => {
     try {
       await AsyncStorage.setItem(
-        "@PrayerTracker_PRAYS",
+        '@PrayerTracker_PRAYS',
         JSON.stringify(this.state.prays)
       );
     } catch (e) {
@@ -77,7 +77,7 @@ export default class App extends Component {
     this.setState(
       {
         ...this.state,
-        selectedDay: day.dateString,
+        selectedDay: day.dateString
       },
       () => {
         this.markDays();
@@ -95,58 +95,54 @@ export default class App extends Component {
   onPrayPress(prayName) {
     const name = prayName;
     const day = this.state.selectedDay;
-    const today = moment().format("YYYY-MM-DD");
-    if (day > today) {
-      alert("You cannot log this Prayer at the Moment");
+
+    let status = false;
+    if (
+      undefined === this.state.prays[day] ||
+      undefined === this.state.prays[day][name]
+    ) {
     } else {
-      let status = false;
-      if (
-        undefined === this.state.prays[day] ||
-        undefined === this.state.prays[day][name]
-      ) {
-      } else {
-        status = this.state.prays[day][name];
-      }
-
-      let colorIndex = 1;
-      if (
-        !(
-          undefined === this.state.prays[day] ||
-          undefined === this.state.prays[day].colorIndex
-        )
-      ) {
-        colorIndex = this.state.prays[day].colorIndex;
-      }
-
-      let praysOfDay = {};
-      if (undefined === this.state.prays[day]) {
-        praysOfDay = {
-          [name]: !status,
-          colorIndex: colorIndex,
-        };
-      } else {
-        praysOfDay = {
-          ...this.state.prays[day],
-          [name]: !status,
-          colorIndex: !status ? this.raise(colorIndex) : this.lower(colorIndex),
-        };
-      }
-
-      this.setState(
-        {
-          ...this.state,
-          prays: {
-            ...this.state.prays,
-            [day]: praysOfDay,
-          },
-          selectedDayColorIndex: praysOfDay.colorIndex,
-        },
-        () => {
-          this.savePrays();
-          this.markDays();
-        }
-      );
+      status = this.state.prays[day][name];
     }
+
+    let colorIndex = 1;
+    if (
+      !(
+        undefined === this.state.prays[day] ||
+        undefined === this.state.prays[day].colorIndex
+      )
+    ) {
+      colorIndex = this.state.prays[day].colorIndex;
+    }
+
+    let praysOfDay = {};
+    if (undefined === this.state.prays[day]) {
+      praysOfDay = {
+        [name]: !status,
+        colorIndex: colorIndex
+      };
+    } else {
+      praysOfDay = {
+        ...this.state.prays[day],
+        [name]: !status,
+        colorIndex: !status ? this.raise(colorIndex) : this.lower(colorIndex)
+      };
+    }
+
+    this.setState(
+      {
+        ...this.state,
+        prays: {
+          ...this.state.prays,
+          [day]: praysOfDay
+        },
+        selectedDayColorIndex: praysOfDay.colorIndex
+      },
+      () => {
+        this.savePrays();
+        this.markDays();
+      }
+    );
   }
 
   markDays() {
@@ -165,29 +161,29 @@ export default class App extends Component {
       [this.state.day]: {
         customStyles: {
           container: {
-            borderWidth: 1,
-          },
-        },
+            borderWidth: 1
+          }
+        }
       },
       [this.state.selectedDay]: {
         customStyles: {
           container: {
-            borderWidth: 1,
-          },
-        },
-      },
+            borderWidth: 1
+          }
+        }
+      }
     };
 
-    Object.keys(this.state.prays).map((day) => {
+    Object.keys(this.state.prays).map(day => {
       markedDays[day] = {
         customStyles: {
           container: {
-            backgroundColor: colors[this.state.prays[day].colorIndex],
+            backgroundColor: colors[this.state.prays[day].colorIndex]
           },
           text: {
-            color: textColors[this.state.prays[day].colorIndex],
-          },
-        },
+            color: textColors[this.state.prays[day].colorIndex]
+          }
+        }
       };
       if (day === this.state.selectedDay || day === this.state.day) {
         markedDays[day].customStyles.container.borderWidth = 1;
@@ -196,7 +192,7 @@ export default class App extends Component {
 
     this.setState({
       ...this.state,
-      marks: markedDays,
+      marks: markedDays
     });
   }
 
@@ -208,19 +204,19 @@ export default class App extends Component {
         </View>
         <View>
           <Calendar
-            onDayPress={(day) => this.onDayPress(day)}
+            onDayPress={day => this.onDayPress(day)}
             markedDates={{
-              ...this.state.marks,
+              ...this.state.marks
             }}
-            markingType={"custom"}
+            markingType={'custom'}
             theme={{
-              todayTextColor: "#000",
+              todayTextColor: '#000'
             }}
           />
         </View>
 
         <View style={styles.list}>
-          {prayList.map((prayName) => (
+          {prayList.map(prayName => (
             <Pray
               key={prayName}
               name={prayName}
@@ -241,29 +237,29 @@ export default class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#eee",
-    paddingTop: Constants.statusBarHeight,
+    backgroundColor: '#eee',
+    paddingTop: Constants.statusBarHeight
   },
   header: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
 
-    backgroundColor: "#00adf5",
-    width: "100%",
+    backgroundColor: '#00adf5',
+    width: '100%'
   },
   title: {
-    color: "white",
-    textAlign: "center",
-    fontWeight: "bold",
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
     fontSize: 32,
-    padding: 16,
+    padding: 16
   },
   calendar: {
     marginTop: 10,
-    backgroundColor: "white",
+    backgroundColor: 'white'
   },
   list: {
     marginTop: 10,
-    marginBottom: 6,
-  },
+    marginBottom: 6
+  }
 });
