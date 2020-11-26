@@ -95,8 +95,11 @@ export default class App extends Component {
   onPrayPress(prayName) {
     const name = prayName;
     const day = this.state.selectedDay;
-
+    const today=moment().format('YYYY-MM-DD');
     let status = false;
+    if(day > today){
+      alert("You cannot log this prayer at the moment");
+    }else{
     if (
       undefined === this.state.prays[day] ||
       undefined === this.state.prays[day][name]
@@ -143,6 +146,7 @@ export default class App extends Component {
         this.markDays();
       }
     );
+    }
   }
 
   markDays() {
